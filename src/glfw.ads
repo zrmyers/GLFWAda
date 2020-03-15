@@ -151,8 +151,8 @@ package Glfw is
     );
     -- Values to use for Window Bool Attributes
     for Enum_Bool_Attrib use (
-        BOOL_TRUE  => 0,
-        BOOL_FALSE => 1
+        BOOL_TRUE  => 1,
+        BOOL_FALSE => 0
     );
     for Enum_Bool_Attrib'Size use Interfaces.C.int'Size;
     
@@ -217,8 +217,7 @@ package Glfw is
     for Enum_Context_Robustness'Size use Interfaces.C.int'Size;
     
     -- Window Configuration Data
-    type Record_Window_Configuration is record
-    
+    type Record_Window_Configuration is record    
         Resizable               : Enum_Bool_Attrib        := BOOL_TRUE;
         Visible                 : Enum_Bool_Attrib        := BOOL_TRUE;
         Decorated               : Enum_Bool_Attrib        := BOOL_TRUE;
