@@ -26,20 +26,51 @@
 --       this file where necessary.
 --------------------------------------------------------------------------------
 with Interfaces.C;
+with Ada.Strings.Unbounded;
+use Ada.Strings.Unbounded;
 
 package Glfw is
 
     ----------------------------------------------------------------------------
     -- Named numbers
     ----------------------------------------------------------------------------
-    DONT_CARE : constant := -1;
+    DONT_CARE         : constant := -1;    
+    MAX_STRING_LENGTH : constant := 256;
+    MAX_MONITOR_COUNT : constant := 32;
+    MAX_WINDOW_COUNT  : constant := 64;
+    NONE              : constant := 0;
     
     ----------------------------------------------------------------------------
     -- Types
-    ----------------------------------------------------------------------------   
-    -- A Window Integer Attribute
-    type Int_Attrib is new Integer range DONT_CARE .. Integer'Last;
-     
+    ----------------------------------------------------------------------------  
+    -- A GLFW Integer Value
+    type Glfw_Int is new Integer range DONT_CARE .. Integer'Last;
+    
+    -- A String Attribute.  Assuming maximum string length of 256 
+    -- characters
+    type Glfw_String is new String (1 .. MAX_STRING_LENGTH);
+    
+    -- Window Boolean Attribute
+    type Glfw_Bool is new Boolean;
+    -- Values to use for Window Bool Attributes
+    for Glfw_Bool use (
+        FALSE => 0,
+        TRUE  => 1        
+    );
+    for Glfw_Bool'Size use Interfaces.C.int'Size;
+    
+    -- An empty Glfw_String.
+    GLFW_STRING_EMPTY : constant Glfw_String := (others => Character'Val(0));
+    
+    -- IDs for GLFW windows
+    type Window_Id is new Integer range NONE .. MAX_WINDOW_COUNT;
+    
+    -- IDs for GLFW monitors
+    type Monitor_Id is new Integer range NONE .. MAX_MONITOR_COUNT;
+    
+    -- A Window Dimmension Attribute
+    type Window_Dimmension is new Integer range 1 .. Integer'Last;
+    
     -- Return Codes that can be passed back from GLFW operations
     type Enum_Return_Codes is (
     
@@ -137,24 +168,21 @@ package Glfw is
     -- Return codes related to initializing and terminating GLFW on the current
     -- platform.
     subtype Enum_Platform_Return_Codes is Enum_Return_Codes 
-        with Static_Predicate => 
-            Enum_Platform_Return_Codes in NO_ERROR | PLATFORM_ERROR;
+        with Static_Predicate => Enum_Platform_Return_Codes in 
+            NO_ERROR | 
+            PLATFORM_ERROR;
     
-    -- Window Boolean Attribute
-    type Enum_Bool_Attrib is (
-    
-    	-- A true boolean value
-        BOOL_TRUE,
-        
-        -- A false boolean value
-        BOOL_FALSE
-    );
-    -- Values to use for Window Bool Attributes
-    for Enum_Bool_Attrib use (
-        BOOL_TRUE  => 1,
-        BOOL_FALSE => 0
-    );
-    for Enum_Bool_Attrib'Size use Interfaces.C.int'Size;
+    -- Return codes related to initializing a GLFW Window.
+    subtype Enum_Window_Init_Return_Codes is Enum_Return_Codes 
+        with Static_Predicate => Enum_Window_Init_Return_Codes in
+            NO_ERROR |
+            NOT_INITIALIZED |
+            INVALID_ENUM |
+            INVALID_VALUE |
+            API_UNAVAILABLE |
+            VERSION_UNAVAILABLE |
+            FORMAT_UNAVAILABLE |
+            PLATFORM_ERROR;
     
     -- The client API type
     type Enum_Client_Api is (
@@ -202,7 +230,7 @@ package Glfw is
         -- No Context robustness
         NO_ROBUSTNESS,
         
-        -- No reset Notification robustness strategy
+        -- No reset notification robustness strategy
         NO_RESET_NOTIFICATION,
         
         -- Lose context on reset robustness strategy
@@ -216,43 +244,248 @@ package Glfw is
     );
     for Enum_Context_Robustness'Size use Interfaces.C.int'Size;
     
+    -- The release behavior used by the context.
+    type Enum_Context_Release_Behavior is (
+        -- The default behavior of the context creation API is used.
+        RELEASE_BEHAVIOR_ANY,
+        
+        -- The pipeline will be flushed whenever the context is released from
+        -- being the current one.
+        RELEASE_BEHAVIOR_FLUSH,
+        
+        -- The pipeline will not be flushed on release.
+        RELEASE_BEHAVIOR_NONE
+    );
+    for Enum_Context_Release_Behavior use (
+        RELEASE_BEHAVIOR_ANY   => 16#00000000#,
+        RELEASE_BEHAVIOR_FLUSH => 16#00035001#,
+        RELEASE_BEHAVIOR_NONE  => 16#00035002#
+    );
+    for Enum_Context_Release_Behavior'Size use Interfaces.C.int'Size;
+    
+    -- The OpenGL profile to create the context for.
+    type Enum_OpenGl_Profile is (
+    
+        -- A specific profile is not requested.
+        OPENGL_ANY_PROFILE,
+    
+        -- The OpenGL Core profile is requested.
+        OPENGL_CORE_PROFILE,
+        
+        -- The OpenGL Compatibility profile is requested.
+        OPENGL_COMPAT_PROFILE
+    );
+    for Enum_OpenGl_Profile use (
+        OPENGL_ANY_PROFILE    => 16#00000000#,
+        OPENGL_CORE_PROFILE   => 16#00032001#,
+        OPENGL_COMPAT_PROFILE => 16#00032002#
+    );
+    for Enum_OpenGl_Profile'Size use Interfaces.C.int'Size;
+    
     -- Window Configuration Data
     type Record_Window_Configuration is record    
-        Resizable               : Enum_Bool_Attrib        := BOOL_TRUE;
-        Visible                 : Enum_Bool_Attrib        := BOOL_TRUE;
-        Decorated               : Enum_Bool_Attrib        := BOOL_TRUE;
-        Focused                 : Enum_Bool_Attrib        := BOOL_TRUE;
-        Auto_Iconify            : Enum_Bool_Attrib        := BOOL_TRUE;
-        Floating                : Enum_Bool_Attrib        := BOOL_FALSE;
-        Maximized               : Enum_Bool_Attrib        := BOOL_FALSE;
-        Center_Cursor           : Enum_Bool_Attrib        := BOOL_TRUE;
-        Transparent_Framebuffer : Enum_Bool_Attrib        := BOOL_FALSE;
-        Focus_On_Show           : Enum_Bool_Attrib        := BOOL_TRUE;
-        Scale_To_Monitor        : Enum_Bool_Attrib        := BOOL_FALSE;
-        Red_Bits                : Int_Attrib              := 8;
-        Green_Bits              : Int_Attrib              := 8;
-        Blue_Bits               : Int_Attrib              := 8;
-        Alpha_Bits              : Int_Attrib              := 8;
-        Depth_Bits              : Int_Attrib              := 24;
-        Stencil_Bits            : Int_Attrib              := 8;
-        Accum_Red_Bits          : Int_Attrib              := 0;
-        Accum_Green_Bits        : Int_Attrib              := 0;
-        Accum_Blue_Bits         : Int_Attrib              := 0;
-        Accum_Alpha_Bits        : Int_Attrib              := 0;
-        Aux_Buffers             : Int_Attrib              := 0;
-        Samples                 : Int_Attrib              := 0;
-        Refresh_Rate            : Int_Attrib              := DONT_CARE;
-        Stereo                  : Enum_Bool_Attrib        := BOOL_FALSE;
-        Srgb_Capable            : Enum_Bool_Attrib        := BOOL_FALSE;
-        Doublebuffer            : Enum_Bool_Attrib        := BOOL_TRUE;
-        Client_Api              : Enum_Client_Api         := OPENGL_API;
-        Context_Creation_Api    : Enum_Context_Api        := NATIVE_CONTEXT_API;
-        Context_Version_Major   : Int_Attrib              := 1;
-        Context_Version_Minor   : Int_Attrib              := 0;
-        Context_Robustness      : Enum_Context_Robustness := NO_ROBUSTNESS;
+    
+        -- Specifies whether the windowed mode window will be resizable by the 
+        -- user. The window will be resizable using the Set_Window_Size function.
+        -- This hint is ignored for full screen and undecorated windows.
+        Resizable                : Glfw_Bool              := TRUE;
+        
+        -- Specifies whether the windowed mode window will initially be visible.
+        -- This hint is ignored for full screen windows.
+        Visible                  : Glfw_Bool              := TRUE;
+        
+        -- Specifies whether the windowed mode window will have decorations such
+        -- as a border, a close widget, etc. An undecorated window will not be 
+        -- resizable by the user but will still allow the user to generate close 
+        -- events on some platforms. This hint is ignored for full screen windows.
+        Decorated                : Glfw_Bool              := TRUE;
+        
+        -- Specifies whether the windowed mode window will be given input focus
+        -- when created. This hint is ignored by full screen and initially hidden
+        -- windows.
+        Focused                  : Glfw_Bool              := TRUE;
+        
+        -- Specifies whether the full screen window will automatically iconify
+        -- and restore the previous video mode on input focus loss. This hint is
+        -- ignored for windowed mode windows.
+        Auto_Iconify             : Glfw_Bool              := TRUE;
+        
+        -- Specifies whether the windowed mode window will be floating above other
+        -- regular windows, also called topmost or always-on-top. This is intended
+        -- primarily for debugging purposes and cannot be used to implement proper
+        -- full screen windows. This hint is ignored for full screen windows.
+        Floating                 : Glfw_Bool              := FALSE;
+        
+        -- Specifies whether the windowed mode window will be maximized when created.
+        -- This hint is ignored for full screen windows
+        Maximized                : Glfw_Bool              := FALSE;
+        
+        -- Specifies whether the cursor should be centered over newly created full
+        -- screen windows. This hint is ignored for windowed mode windows.
+        Center_Cursor            : Glfw_Bool              := TRUE;
+        
+        -- Specifies whether the window framebuffer will be transparent. If enabled
+        -- and supported by the system, the window framebuffer alpha channel will
+        -- be used to combine the framebuffer with the background. This does not
+        -- affect window decorations.
+        Transparent_Framebuffer  : Glfw_Bool              := FALSE;
+        
+        -- Specifies whether the window will be given input focus when Show_Window
+        -- is called.
+        Focus_On_Show            : Glfw_Bool              := TRUE;
+        
+        -- Specifies whether the window content area should be resized based on
+        -- the monitor content scale of any monitor it is placed on. This includes
+        -- the initial placement when the window is created.
+        Scale_To_Monitor         : Glfw_Bool              := FALSE;
+        
+        -- The desired bit depth for the Red component of the default framebuffer.
+        -- A value of DONT_CARE means the application has no preference.
+        Red_Bits                 : Glfw_Int                    := 8;
+        
+        -- The desired bit depth for the Green component of the default framebuffer.
+        -- A value of DONT_CARE means the application has no preference.
+        Green_Bits               : Glfw_Int                    := 8;
+        
+        -- The desired bit depth for the Blue component of the default framebuffer.
+        -- A value of DONT_CARE means the application has no preference.
+        Blue_Bits                : Glfw_Int                    := 8;
+        
+        -- The desired bit depth for the Alpha component of the default framebuffer.
+        -- A value of DONT_CARE means the application has no preference.
+        Alpha_Bits               : Glfw_Int                    := 8;
+        
+        -- The desired bit depth for the Depth component of the default framebuffer.
+        -- A value of DONT_CARE means the application has no preference.
+        Depth_Bits               : Glfw_Int                    := 24;
+        
+        -- The desired bit depth for the Stencil component of the default framebuffer.
+        -- A value of DONT_CARE means the application has no preference.
+        Stencil_Bits             : Glfw_Int                    := 8;
+        
+        -- The desired bit depth for the Red component of the accummulation buffer.
+        -- A value of DONT_CARE means the application has no preference.
+        --
+        -- Accumulation buffers are a legacy OpenGL feature and should not be used
+        -- in new code.
+        Accum_Red_Bits           : Glfw_Int                    := 0;
+        
+        -- The desired bit depth for the Green component of the accummulation buffer.
+        -- A value of DONT_CARE means the application has no preference.
+        --
+        -- Accumulation buffers are a legacy OpenGL feature and should not be used
+        -- in new code.
+        Accum_Green_Bits         : Glfw_Int                    := 0;
+        
+        -- The desired bit depth for the Blue component of the accummulation buffer.
+        -- A value of DONT_CARE means the application has no preference.
+        --
+        -- Accumulation buffers are a legacy OpenGL feature and should not be used
+        -- in new code.
+        Accum_Blue_Bits          : Glfw_Int                    := 0;
+        
+        -- The desired bit depth for the Alpha component of the accummulation buffer.
+        -- A value of DONT_CARE means the application has no preference.
+        --
+        -- Accumulation buffers are a legacy OpenGL feature and should not be used
+        -- in new code.
+        Accum_Alpha_Bits         : Glfw_Int                    := 0;
+        
+        -- Specifies the desired number of auxiliary buffers. A value of DONT_CARE
+        -- means the application has no preference.
+        --
+        -- Auxiliary buffers are a legacy OpenGL feature and should not be used
+        -- in new code.
+        Aux_Buffers              : Glfw_Int                    := 0;
+        
+        -- Specifies the desired number of samples to use for multisampling. Zero
+        -- disables multisampling. A value of DONT_CARE means the application has
+        -- no preference.
+        Samples                  : Glfw_Int                    := 0;
+        
+        -- Specifies the desired refresh rate for full screen windows. A value of
+        -- DONT_CARE means the highest available refresh rate will be used. This
+        -- hint is ignored for windowed mode windows.
+        Refresh_Rate             : Glfw_Int                    := DONT_CARE;
+        
+        -- Specifies whether to use OpenGL stereoscopic rendering. This is a 
+        -- hard constraint.
+        Stereo                   : Glfw_Bool              := FALSE;
+        
+        -- Specifies whether the framebuffer should be sRGB capable.
+        --
+        --    OpenGL: If enabled and supported by the system, the GL_FRAMEBUFFER_SRGB
+        --            enable will control sRGB rendering. By default, sRGB rendering
+        --            will be disabled.
+        --
+        --    OpenGL ES: If enabled and supported by the system, the context will
+        --               always have sRGB rendering enabled.
+        Srgb_Capable             : Glfw_Bool              := FALSE;
+        
+        -- Specifies whether the framebuffer should be double buffered.  This is a
+        -- hard constraint.
+        Doublebuffer             : Glfw_Bool              := TRUE;
+        
+        -- Specifies which client API to create the context for. This is a hard
+        -- constraint.
+        Client_Api               : Enum_Client_Api               := OPENGL_API;
+        
+        -- Specifies which context creation API to use to create the context. This
+        -- is a hard constraint. If no client API is requested, this hint is ignored.
+        Context_Creation_Api     : Enum_Context_Api              := NATIVE_CONTEXT_API;
+        
+        -- Specifies the client API major version that the created context must be
+        -- compatible with.  The exact behavior of these hints depends on the requested
+        -- client API.
+        Context_Version_Major    : Glfw_Int                    := 1;
+        
+        -- Specifies the client API minor version that the created context must be
+        -- compatible with.  The exact behavior of these hints depends on the requested
+        -- client API.
+        Context_Version_Minor    : Glfw_Int                    := 0;
+        
+        -- Specifies the robustness strategy to be used by the context.
+        Context_Robustness       : Enum_Context_Robustness       := NO_ROBUSTNESS;
+        
+        -- Specifies the release behavior to be used by the context.
+        Context_Release_Behavior : Enum_Context_Release_Behavior := RELEASE_BEHAVIOR_ANY;
+        
+        -- Specifies whether the OpenGL context should be forward compatible, i.e.
+        -- where all functionality deprecated in the requested version of OpenGL is
+        -- removed. This must only be used if the requested OpenGL version is 3.0
+        -- or above. If OpenGL ES is requested, this hint is ignored.
+        OpenGl_Forward_Compat    : Glfw_Bool              := FALSE;
+        
+        -- Specifies which OpenGL profile to create the context for. If OpenGL ES
+        -- is requested, this hint is ignored.
+        OpenGl_Profile           : Enum_OpenGl_Profile           := OPENGL_ANY_PROFILE;
+        
+        -- Specifies whether to use full resolution framebuffers on Retina displays.
+        -- This is only used on macOS platforms.
+        Cocoa_Retina_Framebuffer : Glfw_Bool              := TRUE;
+        
+        -- Specifies the UTF-8 encoded name to use for autosaving the window frame,
+        -- or if empty disables frame autosaving for the window. This is only used
+        -- on macOS platforms.        
+        Cocoa_Frame_Name         : Glfw_String                 := GLFW_STRING_EMPTY;
+        
+        -- Specifies whether to allow the system to choose the integrated GPU for
+        -- the OpenGL context and move it between GPUs if necessary or whether to
+        -- force it to always run on the discrete GPU. This only affects systems
+        -- with both integrated and discrete GPUs. This is only used on macOS 
+        -- platforms.
+        Cocoa_Graphics_Switching : Glfw_Bool              := FALSE;
+        
+        -- Specifies the X11 Class name encoded in ASCII.
+        X11_Class_Name           : Glfw_String                   := GLFW_STRING_EMPTY;
+        
+        -- Specifes the X11 Instance name encoded in ASCII.
+        X11_Instance_Name        : Glfw_String                   := GLFW_STRING_EMPTY;
         
     end record;
     
+    ----------------------------------------------------------------------------
+    -- Platform Functions
     ----------------------------------------------------------------------------
     -- @brief
     -- This operation initializes GLFW, and should be called before most other
@@ -264,9 +497,9 @@ package Glfw is
     -- If this operation succeeds, all subsequent operations return immediately
     -- with NO_ERROR value.
     -- 
-    -- @returns Returns one of the values of Init_Return_Codes.
+    -- @returns One of the values of Init_Return_Codes.
     ----------------------------------------------------------------------------
-    function Init return Enum_Platform_Return_Codes;
+    function Platform_Init return Enum_Platform_Return_Codes;
     
     ----------------------------------------------------------------------------
     -- @brief
@@ -274,8 +507,77 @@ package Glfw is
     -- application to free any resources used by GLFW.
     --
     -- It is possible for the PLATFORM_ERROR return code to be returned.
+    --
+    -- @returns One of the values of Init_Return_Codes.
     ----------------------------------------------------------------------------
-    function Shutdown return Enum_Platform_Return_Codes;
+    function Platform_Shutdown return Enum_Platform_Return_Codes;
     
+    ----------------------------------------------------------------------------
+    -- @brief
+    -- Process GLFW events.
+    ----------------------------------------------------------------------------
+    procedure Platform_Process_Events; 
     
+    ----------------------------------------------------------------------------
+    -- Window Functions
+    ----------------------------------------------------------------------------
+    -- @brief
+    -- This operation initializes a GLFW window, and should be called prior to
+    -- use of any operation that depends on the existence of a window.
+    --
+    -- For every member of the window configuration structure a call to set the
+    -- corresponding GLFW window Hint is made prior to creating the window.
+    --
+    -- @param[in]     width         The desired width, in screen coordinates, of 
+    --                              the window.
+    -- @param[in]     height        The desired height, in screen coordinates, 
+    --                              of the window.
+    -- @param[in]     title         The initial, UTF-8 encoded window title.
+    -- @param[in]     monitor       The monitor to use for full screen mode, or 
+    --                              NULL for windowed mode.
+    -- @param[in]     share         The window whose context to share resources 
+    --                              with, or NULL to not share resources.
+    -- @param[in]     window_config The desired configuration for the window.
+    -- 
+    -- @returns One of the values of Window_Init_Return_Codes.
+    ----------------------------------------------------------------------------
+    function Window_Init
+        (
+            width         : in     Window_Dimmension;
+            height        : in     Window_Dimmension;
+            title         : in     String;
+            monitor       : in     Monitor_Id := NONE;
+            share         : in     Window_Id  := NONE;
+            window_config : in     Record_Window_Configuration;
+            window        : out    Window_Id
+        )
+    return Enum_Window_Init_Return_Codes;
+    
+    ----------------------------------------------------------------------------
+    -- @brief
+    -- This operation determines whether the it has been requested for a window
+    -- to close.
+    --
+    -- @param[in]     window The window that should be closed.
+    --
+    -- @returns Boolean True if the window should close, otherwise boolean false.
+    ----------------------------------------------------------------------------
+    function Window_Should_Close
+        (
+            window : in     Window_Id
+        )
+    return Boolean;
+    
+    ----------------------------------------------------------------------------
+    -- @brief 
+    -- This operation destroys the given window.
+    --
+    -- @param[in]     window The window that will be destroyed.
+    ----------------------------------------------------------------------------
+    procedure Window_Destroy
+        (
+            window : in     Window_Id
+        );
+        
+        
 end Glfw;
