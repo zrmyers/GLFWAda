@@ -21,7 +21,7 @@
 ## OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ## SOFTWARE.
 ################################################################################
-# This Makefile is used to build, install, and update the VulkanAda library, as
+# This Makefile is used to build, install, and update the GlfwAda library, as
 # well as to build its tests.
 ################################################################################
 
