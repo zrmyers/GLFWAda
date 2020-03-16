@@ -22,6 +22,7 @@
 -- SOFTWARE.
 --------------------------------------------------------------------------------
 with Interfaces.C;
+with Interfaces.C.Strings;
 with System;
 with Glfw.Error;
 
@@ -42,7 +43,7 @@ private package Glfw.Api is
     -- Import the glfwGetError() function from the GLFW C library.
     function glfwGetError
         (
-            message :    out Interfaces.C.char_array
+            message :    out Interfaces.C.Strings.chars_ptr
         )
         return Error.Enum_Return_Codes;
     pragma Import (Convention    => C,

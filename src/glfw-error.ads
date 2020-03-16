@@ -21,10 +21,12 @@
 -- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 -- SOFTWARE.
 --------------------------------------------------------------------------------
-----------------------------------------------------------------------------
--- Error handling machinery is defined with a private package in order to 
--- effectively handle errors after GLFW API calls.
-----------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- This file provides an interface to Data Types and operations for raising
+-- exceptions after detection of an error in GLFW.
+--------------------------------------------------------------------------------
+with Interfaces.C;
+
 private package Glfw.Error is
 
 	-- Return Codes that can be passed back from GLFW operations
