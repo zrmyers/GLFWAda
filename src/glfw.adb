@@ -1,3 +1,28 @@
+--------------------------------------------------------------------------------
+-- MIT License
+--
+-- Copyright (c) 2020 Zane Myers
+--
+-- Permission is hereby granted, free of charge, to any person obtaining a copy
+-- of this software and associated documentation files (the "Software"), to deal
+-- in the Software without restriction, including without limitation the rights
+-- to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+-- copies of the Software, and to permit persons to whom the Software is
+-- furnished to do so, subject to the following conditions:
+--
+-- The above copyright notice and this permission notice shall be included in all
+-- copies or substantial portions of the Software.
+--
+-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+-- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+-- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+-- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+-- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+-- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+-- SOFTWARE.
+--------------------------------------------------------------------------------
+with Glfw.Api;
+
 package body Glfw is
 
     ----------------------------------------------------------------------------
@@ -5,58 +30,49 @@ package body Glfw is
     ----------------------------------------------------------------------------
 
 
-    function Platform_Init return Enum_Platform_Return_Codes is 
+    procedure Platform_Init 
+    is
+        is_successful : Glfw_Bool := FALSE;
     begin
-       null
+        
+        is_successful := Api.glfwInit;
+        
+        if not is_successful then
+        
+            -- A platform error must have occurred.
+            raise Exceptions.PLATFORM_ERROR with 
+                "Call to function glfwInit() failed, indicating that a" &
+                " platform error has occurred.";
+            
+        end if;        
+        
     end Platform_Init;
     
-    ----------------------------------------------------------------------------
-    -- @brief
-    -- This operation shuts down GLFW, and should be called before exiting the
-    -- application to free any resources used by GLFW.
-    --
-    -- It is possible for the PLATFORM_ERROR return code to be returned.
-    --
-    -- @returns One of the values of Init_Return_Codes.
-    ----------------------------------------------------------------------------
-    function Platform_Shutdown return Enum_Platform_Return_Codes is
-    begin
-       null
-    end Platform_Shutdown;
     
     ----------------------------------------------------------------------------
-    -- @brief
-    -- Process GLFW events.
+
+
+    procedure Platform_Shutdown is
+    begin
+        raise Exceptions.PLATFORM_ERROR;
+    end Platform_Shutdown;
+    
+    
     ----------------------------------------------------------------------------
+
+
     procedure Platform_Process_Events is 
     begin 
-       null
+        raise Exceptions.PLATFORM_ERROR;
     end Platform_Process_Events;
+    
     
     ----------------------------------------------------------------------------
     -- Window Functions
     ----------------------------------------------------------------------------
-    -- @brief
-    -- This operation initializes a GLFW window, and should be called prior to
-    -- use of any operation that depends on the existence of a window.
-    --
-    -- For every member of the window configuration structure a call to set the
-    -- corresponding GLFW window Hint is made prior to creating the window.
-    --
-    -- @param[in]     width         The desired width, in screen coordinates, of 
-    --                              the window.
-    -- @param[in]     height        The desired height, in screen coordinates, 
-    --                              of the window.
-    -- @param[in]     title         The initial, UTF-8 encoded window title.
-    -- @param[in]     monitor       The monitor to use for full screen mode, or 
-    --                              NULL for windowed mode.
-    -- @param[in]     share         The window whose context to share resources 
-    --                              with, or NULL to not share resources.
-    -- @param[in]     window_config The desired configuration for the window.
-    -- 
-    -- @returns One of the values of Window_Init_Return_Codes.
-    ----------------------------------------------------------------------------
-    function Window_Init
+    
+    
+    procedure Window_Init
         (
             width         : in     Window_Dimmension;
             height        : in     Window_Dimmension;
@@ -65,42 +81,41 @@ package body Glfw is
             share         : in     Window_Id  := NONE;
             window_config : in     Record_Window_Configuration;
             window        : out    Window_Id
-        )
-    return Enum_Window_Init_Return_Codes is
+        ) 
+    is     
+        
     begin
-       null;
+    
+       raise Exceptions.PLATFORM_ERROR;
     end Window_Init;
     
+    
     ----------------------------------------------------------------------------
-    -- @brief
-    -- This operation determines whether the it has been requested for a window
-    -- to close.
-    --
-    -- @param[in]     window The window that should be closed.
-    --
-    -- @returns Boolean True if the window should close, otherwise boolean false.
-    ----------------------------------------------------------------------------
+
+
     function Window_Should_Close
         (
             window : in     Window_Id
         )
-    return Boolean is
+        return Boolean 
+    is
+    
     begin
-       null;
+        raise Exceptions.PLATFORM_ERROR;
+       
+        return TRUE;
     end;
     
     ----------------------------------------------------------------------------
-    -- @brief 
-    -- This operation destroys the given window.
-    --
-    -- @param[in]     window The window that will be destroyed.
-    ----------------------------------------------------------------------------
+
+
     procedure Window_Destroy
         (
             window : in     Window_Id
-        ) is
-     begin
-        null;
-     end;
+        ) 
+    is
+    begin
+       raise Exceptions.PLATFORM_ERROR;
+    end;
         
 end Glfw;

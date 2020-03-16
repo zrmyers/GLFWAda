@@ -24,17 +24,13 @@
 with Ada.Text_IO;
 With Glfw;
 
-use type Glfw.Enum_Return_Codes;
-
 procedure Glfw_Test.Environment is
 
     -- The default window configuration is used, with no client API specified.
     window_config : Glfw.Record_Window_Configuration := (
         Client_Api => Glfw.NO_API,
         others     => <>
-    );
-    
-    glfw_return_code : Glfw.Enum_Return_Codes := Glfw.NO_ERROR;
+    );    
     
     window_id : Glfw.Window_Id := Glfw.NONE;
     
@@ -42,32 +38,21 @@ begin
     Ada.Text_IO.Put_Line("Initializing GLFW");
     
     -- Initialize GLFW
-    glfw_return_code := Glfw.Platform_Init;
-   
-    if 
-        not (glfw_return_code = Glfw.NO_ERROR)
-    then
-        Ada.Text_IO.Put_Line(" Glfw.Init Failed:");
-        Ada.Text_IO.Put(Glfw.Enum_Return_Codes'Image(glfw_return_code));
-    end if;
+    Glfw.Platform_Init;
+    
+    Ada.Text_IO.Put_Line("Initializing Window");
     
     -- Initialize a GLFW Window
-    glfw_return_code := 
-        Glfw.Window_Init(
-            width         => 1024,
-            height        => 768,
-            title         => "Hello World!",
-            window_config => window_config,
-            window        => window_id);
+    Glfw.Window_Init(
+        width         => 1024,
+        height        => 768,
+        title         => "Hello World!",
+        window_config => window_config,
+        window        => window_id);
    
-   if 
-       not (glfw_return_code = Glfw.NO_ERROR)
-   then
-       Ada.Text_IO.Put_Line(" Glfw.Window_Init Failed:");
-       Ada.Text_IO.Put(Glfw.Enum_Return_Codes'Image(glfw_return_code));
-   end if;
+    Ada.Text_IO.Put_Line("Running GLFW Main Loop");
    
-   -- Main Loop
+    -- Main Loop
     loop 
         ------------------------------------------------------------------------
         -- This loop will run forever until the user closes the window or some
@@ -86,17 +71,15 @@ begin
         Glfw.Platform_Process_Events;
     end loop;
    
+    Ada.Text_IO.Put_Line("Destroying Window");
+   
     Glfw.Window_Destroy(window => window_id);
    
-    -- Shut down the GLFW instance
-    glfw_return_code := Glfw.Platform_Shutdown;
+    Ada.Text_IO.Put_Line("Shutting Down GLFW");
     
-    if 
-        not (glfw_return_code = Glfw.NO_ERROR)
-    then
-        Ada.Text_IO.Put_Line(" Glfw.Shutdown Failed:");
-        Ada.Text_IO.Put(Glfw.Enum_Return_Codes'Image(glfw_return_code));
-    end if;
+    -- Shut down the GLFW instance
+    Glfw.Platform_Shutdown;
+    
     
 end Glfw_Test.Environment;
 

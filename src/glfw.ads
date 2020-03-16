@@ -26,13 +26,88 @@
 --       this file where necessary.
 --------------------------------------------------------------------------------
 with Interfaces.C;
-with Ada.Strings.Unbounded;
-use Ada.Strings.Unbounded;
 
 package Glfw is
 
+    -- The following internal package contains exceptions that can be raised by
+    -- GLFW Operations.
+    package Exceptions is 
+        
+        -- This occurs if a GLFW function was called that must not be called 
+        -- unless the library is initialized.
+        --
+        -- This is an application programmer error.
+        NOT_INITIALIZED : exception;
+        
+        -- This occurs if a GLFW function was called that needs and operates on
+        -- the current OpenGL or OpenGL ES context but no context is current on
+        -- the calling thread.
+        --
+        -- This is an application programmer error.
+        NO_CURRENT_CONTEXT : exception;
+        
+        -- This occurs if one of the arguments to a function was an invalid enum
+        -- value.
+        --
+        -- This is an application programmer error.
+        INVALID_ENUM : exception;
+        
+        -- On of the arguments to the function was an invalid value, for example
+        -- requesting a non-existent OpenGL or OpenGL ES version like 2.7.
+        --
+        -- Requesting a valid but unavailable OpenGL or OpenGL ES version will
+        -- instead result in a VERSION_UNAVAILABLE error.
+        --
+        -- This is an application programmer error.
+        INVALID_VALUE : exception;
+        
+        -- A memory allocation failed.
+        --
+        -- A bug in GLFW or the underlying operating system.
+        OUT_OF_MEMORY : exception;
+        
+        -- GLFW could not find support for the requested API on the system.
+        --
+        -- The installed graphics driver does not support the requested API, or
+        -- does not support it via the chosen context creation backend.
+        API_UNAVAILABLE : exception;
+        
+        -- The requested OpenGL or OpenGL ES version (including any requested 
+        -- context or framebuffer hints) is not available on this machine.
+        --
+        -- The machine does not support the requirements for the application. If
+        -- the application is sufficiently flexible it can downgrade its 
+        -- requirements and try again. Otherwise, the user should be informed that
+        -- the machine does not match minimum requirements.
+        --
+        -- Future invalid OpenGL and OpenGL ES versions, for example OpenGL 4.8
+        -- if 5.0 comes out before the 4.x series gets that far, also fail with
+        -- this error and not INVALID_VALUE, because GLFW cannot know what future
+        -- versions will exist.
+        VERSION_UNAVAILABLE : exception;
+        
+        -- A platform-specific error occurred that does not match any of the more
+        -- specific categories.
+        --
+        -- A bug or configuration error in GLFW, the underlying operating system
+        -- or its drivers, or a lack of required resources.
+        PLATFORM_ERROR : exception;
+        
+        -- If emitted during window creation, the requested pixel format is not
+        -- supported. One or more hard constraints did not match any of the
+        -- available pixel formats. 
+        --
+        -- If emitted when querying the clipboard, the contents of the clipboard
+        -- could not be converted to the requested format. 
+        FORMAT_UNAVAILABLE : exception;
+        
+        -- A window that does not have an OpenGL or OpenGL ES context was passed
+        -- to a function that requires it to have one.
+        NO_WINDOW_CONTEXT : exception;
+    end Exceptions;
+    
     ----------------------------------------------------------------------------
-    -- Named numbers
+    -- Constants
     ----------------------------------------------------------------------------
     DONT_CARE         : constant := -1;    
     MAX_STRING_LENGTH : constant := 256;
@@ -70,119 +145,6 @@ package Glfw is
     
     -- A Window Dimmension Attribute
     type Window_Dimmension is new Integer range 1 .. Integer'Last;
-    
-    -- Return Codes that can be passed back from GLFW operations
-    type Enum_Return_Codes is (
-    
-        -- No error has occurred.
-        NO_ERROR,
-        
-        -- This occurs if a GLFW function was called that must not be called 
-        -- unless the library is initialized.
-        --
-        -- This is an application programmer error.
-        NOT_INITIALIZED,
-        
-        -- This occurs if a GLFW function was called that needs and operates on
-        -- the current OpenGL or OpenGL ES context but no context is current on
-        -- the calling thread.
-        --
-        -- This is an application programmer error.
-        NO_CURRENT_CONTEXT,
-        
-        -- This occurs if one of the arguments to a function was an invalid enum
-        -- value.
-        --
-        -- This is an application programmer error.
-        INVALID_ENUM,
-        
-        -- On of the arguments to the function was an invalid value, for example
-        -- requesting a non-existent OpenGL or OpenGL ES version like 2.7.
-        --
-        -- Requesting a valid but unavailable OpenGL or OpenGL ES version will
-        -- instead result in a VERSION_UNAVAILABLE error.
-        --
-        -- This is an application programmer error.
-        INVALID_VALUE,
-        
-        -- A memory allocation failed.
-        --
-        -- A bug in GLFW or the underlying operating system.
-        OUT_OF_MEMORY,
-        
-        -- GLFW could not find support for the requested API on the system.
-        --
-        -- The installed graphics driver does not support the requested API, or
-        -- does not support it via the chosen context creation backend.
-        API_UNAVAILABLE,
-        
-        -- The requested OpenGL or OpenGL ES version (including any requested 
-        -- context or framebuffer hints) is not available on this machine.
-        --
-        -- The machine does not support the requirements for the application. If
-        -- the application is sufficiently flexible it can downgrade its 
-        -- requirements and try again. Otherwise, the user should be informed that
-        -- the machine does not match minimum requirements.
-        --
-        -- Future invalid OpenGL and OpenGL ES versions, for example OpenGL 4.8
-        -- if 5.0 comes out before the 4.x series gets that far, also fail with
-        -- this error and not INVALID_VALUE, because GLFW cannot know what future
-        -- versions will exist.
-        VERSION_UNAVAILABLE,
-        
-        -- A platform-specific error occurred that does not match any of the more
-        -- specific categories.
-        --
-        -- A bug or configuration error in GLFW, the underlying operating system
-        -- or its drivers, or a lack of required resources.
-        PLATFORM_ERROR,
-        
-        -- If emitted during window creation, the requested pixel format is not
-        -- supported. One or more hard constraints did not match any of the
-        -- available pixel formats. 
-        --
-        -- If emitted when querying the clipboard, the contents of the clipboard
-        -- could not be converted to the requested format. 
-        FORMAT_UNAVAILABLE,
-        
-        -- A window that does not have an OpenGL or OpenGL ES context was passed
-        -- to a function that requires it to have one.
-        NO_WINDOW_CONTEXT
-    );
-    -- Values to use for Return_Codes enumeration.
-    for Enum_Return_Codes use (
-        NO_ERROR            => 16#00000000#,
-        NOT_INITIALIZED     => 16#00010001#,
-        NO_CURRENT_CONTEXT  => 16#00010002#,
-        INVALID_ENUM        => 16#00010003#,
-        INVALID_VALUE       => 16#00010004#,
-        OUT_OF_MEMORY       => 16#00010005#,
-        API_UNAVAILABLE     => 16#00010006#,
-        VERSION_UNAVAILABLE => 16#00010007#,
-        PLATFORM_ERROR      => 16#00010008#,
-        FORMAT_UNAVAILABLE  => 16#00010009#,
-        NO_WINDOW_CONTEXT   => 16#0001000A#
-    );
-    for Enum_Return_Codes'Size use Interfaces.C.int'Size;
-    
-    -- Return codes related to initializing and terminating GLFW on the current
-    -- platform.
-    subtype Enum_Platform_Return_Codes is Enum_Return_Codes 
-        with Static_Predicate => Enum_Platform_Return_Codes in 
-            NO_ERROR | 
-            PLATFORM_ERROR;
-    
-    -- Return codes related to initializing a GLFW Window.
-    subtype Enum_Window_Init_Return_Codes is Enum_Return_Codes 
-        with Static_Predicate => Enum_Window_Init_Return_Codes in
-            NO_ERROR |
-            NOT_INITIALIZED |
-            INVALID_ENUM |
-            INVALID_VALUE |
-            API_UNAVAILABLE |
-            VERSION_UNAVAILABLE |
-            FORMAT_UNAVAILABLE |
-            PLATFORM_ERROR;
     
     -- The client API type
     type Enum_Client_Api is (
@@ -288,129 +250,129 @@ package Glfw is
         -- Specifies whether the windowed mode window will be resizable by the 
         -- user. The window will be resizable using the Set_Window_Size function.
         -- This hint is ignored for full screen and undecorated windows.
-        Resizable                : Glfw_Bool              := TRUE;
+        Resizable                : Glfw_Bool                     := TRUE;
         
         -- Specifies whether the windowed mode window will initially be visible.
         -- This hint is ignored for full screen windows.
-        Visible                  : Glfw_Bool              := TRUE;
+        Visible                  : Glfw_Bool                     := TRUE;
         
         -- Specifies whether the windowed mode window will have decorations such
         -- as a border, a close widget, etc. An undecorated window will not be 
         -- resizable by the user but will still allow the user to generate close 
         -- events on some platforms. This hint is ignored for full screen windows.
-        Decorated                : Glfw_Bool              := TRUE;
+        Decorated                : Glfw_Bool                     := TRUE;
         
         -- Specifies whether the windowed mode window will be given input focus
         -- when created. This hint is ignored by full screen and initially hidden
         -- windows.
-        Focused                  : Glfw_Bool              := TRUE;
+        Focused                  : Glfw_Bool                     := TRUE;
         
         -- Specifies whether the full screen window will automatically iconify
         -- and restore the previous video mode on input focus loss. This hint is
         -- ignored for windowed mode windows.
-        Auto_Iconify             : Glfw_Bool              := TRUE;
+        Auto_Iconify             : Glfw_Bool                     := TRUE;
         
         -- Specifies whether the windowed mode window will be floating above other
         -- regular windows, also called topmost or always-on-top. This is intended
         -- primarily for debugging purposes and cannot be used to implement proper
         -- full screen windows. This hint is ignored for full screen windows.
-        Floating                 : Glfw_Bool              := FALSE;
+        Floating                 : Glfw_Bool                     := FALSE;
         
         -- Specifies whether the windowed mode window will be maximized when created.
         -- This hint is ignored for full screen windows
-        Maximized                : Glfw_Bool              := FALSE;
+        Maximized                : Glfw_Bool                     := FALSE;
         
         -- Specifies whether the cursor should be centered over newly created full
         -- screen windows. This hint is ignored for windowed mode windows.
-        Center_Cursor            : Glfw_Bool              := TRUE;
+        Center_Cursor            : Glfw_Bool                     := TRUE;
         
         -- Specifies whether the window framebuffer will be transparent. If enabled
         -- and supported by the system, the window framebuffer alpha channel will
         -- be used to combine the framebuffer with the background. This does not
         -- affect window decorations.
-        Transparent_Framebuffer  : Glfw_Bool              := FALSE;
+        Transparent_Framebuffer  : Glfw_Bool                     := FALSE;
         
         -- Specifies whether the window will be given input focus when Show_Window
         -- is called.
-        Focus_On_Show            : Glfw_Bool              := TRUE;
+        Focus_On_Show            : Glfw_Bool                     := TRUE;
         
         -- Specifies whether the window content area should be resized based on
         -- the monitor content scale of any monitor it is placed on. This includes
         -- the initial placement when the window is created.
-        Scale_To_Monitor         : Glfw_Bool              := FALSE;
+        Scale_To_Monitor         : Glfw_Bool                     := FALSE;
         
         -- The desired bit depth for the Red component of the default framebuffer.
         -- A value of DONT_CARE means the application has no preference.
-        Red_Bits                 : Glfw_Int                    := 8;
+        Red_Bits                 : Glfw_Int                      := 8;
         
         -- The desired bit depth for the Green component of the default framebuffer.
         -- A value of DONT_CARE means the application has no preference.
-        Green_Bits               : Glfw_Int                    := 8;
+        Green_Bits               : Glfw_Int                      := 8;
         
         -- The desired bit depth for the Blue component of the default framebuffer.
         -- A value of DONT_CARE means the application has no preference.
-        Blue_Bits                : Glfw_Int                    := 8;
+        Blue_Bits                : Glfw_Int                      := 8;
         
         -- The desired bit depth for the Alpha component of the default framebuffer.
         -- A value of DONT_CARE means the application has no preference.
-        Alpha_Bits               : Glfw_Int                    := 8;
+        Alpha_Bits               : Glfw_Int                      := 8;
         
         -- The desired bit depth for the Depth component of the default framebuffer.
         -- A value of DONT_CARE means the application has no preference.
-        Depth_Bits               : Glfw_Int                    := 24;
+        Depth_Bits               : Glfw_Int                      := 24;
         
         -- The desired bit depth for the Stencil component of the default framebuffer.
         -- A value of DONT_CARE means the application has no preference.
-        Stencil_Bits             : Glfw_Int                    := 8;
+        Stencil_Bits             : Glfw_Int                      := 8;
         
         -- The desired bit depth for the Red component of the accummulation buffer.
         -- A value of DONT_CARE means the application has no preference.
         --
         -- Accumulation buffers are a legacy OpenGL feature and should not be used
         -- in new code.
-        Accum_Red_Bits           : Glfw_Int                    := 0;
+        Accum_Red_Bits           : Glfw_Int                      := 0;
         
         -- The desired bit depth for the Green component of the accummulation buffer.
         -- A value of DONT_CARE means the application has no preference.
         --
         -- Accumulation buffers are a legacy OpenGL feature and should not be used
         -- in new code.
-        Accum_Green_Bits         : Glfw_Int                    := 0;
+        Accum_Green_Bits         : Glfw_Int                      := 0;
         
         -- The desired bit depth for the Blue component of the accummulation buffer.
         -- A value of DONT_CARE means the application has no preference.
         --
         -- Accumulation buffers are a legacy OpenGL feature and should not be used
         -- in new code.
-        Accum_Blue_Bits          : Glfw_Int                    := 0;
+        Accum_Blue_Bits          : Glfw_Int                      := 0;
         
         -- The desired bit depth for the Alpha component of the accummulation buffer.
         -- A value of DONT_CARE means the application has no preference.
         --
         -- Accumulation buffers are a legacy OpenGL feature and should not be used
         -- in new code.
-        Accum_Alpha_Bits         : Glfw_Int                    := 0;
+        Accum_Alpha_Bits         : Glfw_Int                      := 0;
         
         -- Specifies the desired number of auxiliary buffers. A value of DONT_CARE
         -- means the application has no preference.
         --
         -- Auxiliary buffers are a legacy OpenGL feature and should not be used
         -- in new code.
-        Aux_Buffers              : Glfw_Int                    := 0;
+        Aux_Buffers              : Glfw_Int                      := 0;
         
         -- Specifies the desired number of samples to use for multisampling. Zero
         -- disables multisampling. A value of DONT_CARE means the application has
         -- no preference.
-        Samples                  : Glfw_Int                    := 0;
+        Samples                  : Glfw_Int                      := 0;
         
         -- Specifies the desired refresh rate for full screen windows. A value of
         -- DONT_CARE means the highest available refresh rate will be used. This
         -- hint is ignored for windowed mode windows.
-        Refresh_Rate             : Glfw_Int                    := DONT_CARE;
+        Refresh_Rate             : Glfw_Int                      := DONT_CARE;
         
         -- Specifies whether to use OpenGL stereoscopic rendering. This is a 
         -- hard constraint.
-        Stereo                   : Glfw_Bool              := FALSE;
+        Stereo                   : Glfw_Bool                     := FALSE;
         
         -- Specifies whether the framebuffer should be sRGB capable.
         --
@@ -420,11 +382,11 @@ package Glfw is
         --
         --    OpenGL ES: If enabled and supported by the system, the context will
         --               always have sRGB rendering enabled.
-        Srgb_Capable             : Glfw_Bool              := FALSE;
+        Srgb_Capable             : Glfw_Bool                     := FALSE;
         
         -- Specifies whether the framebuffer should be double buffered.  This is a
         -- hard constraint.
-        Doublebuffer             : Glfw_Bool              := TRUE;
+        Doublebuffer             : Glfw_Bool                     := TRUE;
         
         -- Specifies which client API to create the context for. This is a hard
         -- constraint.
@@ -437,12 +399,12 @@ package Glfw is
         -- Specifies the client API major version that the created context must be
         -- compatible with.  The exact behavior of these hints depends on the requested
         -- client API.
-        Context_Version_Major    : Glfw_Int                    := 1;
+        Context_Version_Major    : Glfw_Int                      := 1;
         
         -- Specifies the client API minor version that the created context must be
         -- compatible with.  The exact behavior of these hints depends on the requested
         -- client API.
-        Context_Version_Minor    : Glfw_Int                    := 0;
+        Context_Version_Minor    : Glfw_Int                      := 0;
         
         -- Specifies the robustness strategy to be used by the context.
         Context_Robustness       : Enum_Context_Robustness       := NO_ROBUSTNESS;
@@ -454,7 +416,7 @@ package Glfw is
         -- where all functionality deprecated in the requested version of OpenGL is
         -- removed. This must only be used if the requested OpenGL version is 3.0
         -- or above. If OpenGL ES is requested, this hint is ignored.
-        OpenGl_Forward_Compat    : Glfw_Bool              := FALSE;
+        OpenGl_Forward_Compat    : Glfw_Bool                     := FALSE;
         
         -- Specifies which OpenGL profile to create the context for. If OpenGL ES
         -- is requested, this hint is ignored.
@@ -462,19 +424,19 @@ package Glfw is
         
         -- Specifies whether to use full resolution framebuffers on Retina displays.
         -- This is only used on macOS platforms.
-        Cocoa_Retina_Framebuffer : Glfw_Bool              := TRUE;
+        Cocoa_Retina_Framebuffer : Glfw_Bool                     := TRUE;
         
         -- Specifies the UTF-8 encoded name to use for autosaving the window frame,
         -- or if empty disables frame autosaving for the window. This is only used
         -- on macOS platforms.        
-        Cocoa_Frame_Name         : Glfw_String                 := GLFW_STRING_EMPTY;
+        Cocoa_Frame_Name         : Glfw_String                   := GLFW_STRING_EMPTY;
         
         -- Specifies whether to allow the system to choose the integrated GPU for
         -- the OpenGL context and move it between GPUs if necessary or whether to
         -- force it to always run on the discrete GPU. This only affects systems
         -- with both integrated and discrete GPUs. This is only used on macOS 
         -- platforms.
-        Cocoa_Graphics_Switching : Glfw_Bool              := FALSE;
+        Cocoa_Graphics_Switching : Glfw_Bool                     := FALSE;
         
         -- Specifies the X11 Class name encoded in ASCII.
         X11_Class_Name           : Glfw_String                   := GLFW_STRING_EMPTY;
@@ -485,41 +447,45 @@ package Glfw is
     end record;
     
     ----------------------------------------------------------------------------
-    -- Platform Functions
+    -- Platform Operations
     ----------------------------------------------------------------------------
     -- @brief
     -- This operation initializes GLFW, and should be called before most other
     -- GLFW operations.
     --
-    -- If this operation fails, it will free any resources prior to returning the
-    -- PLATFORM_ERROR value.
-    -- 
-    -- If this operation succeeds, all subsequent operations return immediately
-    -- with NO_ERROR value.
-    -- 
-    -- @returns One of the values of Init_Return_Codes.
+    -- @error 
+    -- The following exceptions can be raised by this operation:
+    --    PLATFORM_ERROR: When attempting to initialize GLFW on an incompatible
+    --                    platform.
+    --
     ----------------------------------------------------------------------------
-    function Platform_Init return Enum_Platform_Return_Codes;
+    procedure Platform_Init;
     
     ----------------------------------------------------------------------------
     -- @brief
     -- This operation shuts down GLFW, and should be called before exiting the
     -- application to free any resources used by GLFW.
     --
-    -- It is possible for the PLATFORM_ERROR return code to be returned.
+    -- @error 
+    -- The following exceptions can be raised by this operation:
+    --    PLATFORM_ERROR
     --
-    -- @returns One of the values of Init_Return_Codes.
     ----------------------------------------------------------------------------
-    function Platform_Shutdown return Enum_Platform_Return_Codes;
+    procedure Platform_Shutdown;
     
     ----------------------------------------------------------------------------
     -- @brief
     -- Process GLFW events.
+    --
+    -- @error 
+    -- The following exceptions can be raised by this operation:
+    --    PLATFORM_ERROR
+    --
     ----------------------------------------------------------------------------
     procedure Platform_Process_Events; 
     
     ----------------------------------------------------------------------------
-    -- Window Functions
+    -- Window Operations
     ----------------------------------------------------------------------------
     -- @brief
     -- This operation initializes a GLFW window, and should be called prior to
@@ -538,10 +504,20 @@ package Glfw is
     -- @param[in]     share         The window whose context to share resources 
     --                              with, or NULL to not share resources.
     -- @param[in]     window_config The desired configuration for the window.
-    -- 
-    -- @returns One of the values of Window_Init_Return_Codes.
+    -- @param[out]    window        A handle to the created GLFW window.
+    --
+    -- @error 
+    -- The following exceptions can be raised by this operation:
+    --    PLATFORM_ERROR
+    --    NOT_INITIALIZED
+    --    INVALID_ENUM
+    --    INVALID_VALUE
+    --    API_UNAVAILABLE
+    --    VERSION_UNAVAILABLE
+    --    FORMAT_UNAVAILABLE
+    --    
     ----------------------------------------------------------------------------
-    function Window_Init
+    procedure Window_Init
         (
             width         : in     Window_Dimmension;
             height        : in     Window_Dimmension;
@@ -550,8 +526,7 @@ package Glfw is
             share         : in     Window_Id  := NONE;
             window_config : in     Record_Window_Configuration;
             window        : out    Window_Id
-        )
-    return Enum_Window_Init_Return_Codes;
+        );
     
     ----------------------------------------------------------------------------
     -- @brief
