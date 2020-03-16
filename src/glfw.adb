@@ -22,9 +22,10 @@
 -- SOFTWARE.
 --------------------------------------------------------------------------------
 with Glfw.Api;
+with Glfw.Error;
 
 package body Glfw is
-
+    
     ----------------------------------------------------------------------------
     -- Platform Functions
     ----------------------------------------------------------------------------
@@ -40,11 +41,9 @@ package body Glfw is
         if not is_successful then
         
             -- A platform error must have occurred.
-            raise Exceptions.PLATFORM_ERROR with 
-                "Call to function glfwInit() failed, indicating that a" &
-                " platform error has occurred.";
+            Error.Raise_If_Present;
             
-        end if;        
+        end if;
         
     end Platform_Init;
     
@@ -54,7 +53,7 @@ package body Glfw is
 
     procedure Platform_Shutdown is
     begin
-        raise Exceptions.PLATFORM_ERROR;
+        Error.Raise_If_Present;
     end Platform_Shutdown;
     
     
@@ -63,7 +62,7 @@ package body Glfw is
 
     procedure Platform_Process_Events is 
     begin 
-        raise Exceptions.PLATFORM_ERROR;
+        Error.Raise_If_Present;
     end Platform_Process_Events;
     
     
@@ -86,7 +85,7 @@ package body Glfw is
         
     begin
     
-       raise Exceptions.PLATFORM_ERROR;
+       Error.Raise_If_Present;
     end Window_Init;
     
     
@@ -101,7 +100,7 @@ package body Glfw is
     is
     
     begin
-        raise Exceptions.PLATFORM_ERROR;
+        Error.Raise_If_Present;
        
         return TRUE;
     end;
@@ -115,7 +114,34 @@ package body Glfw is
         ) 
     is
     begin
-       raise Exceptions.PLATFORM_ERROR;
+       Error.Raise_If_Present;
     end;
         
+    
+    ----------------------------------------------------------------------------
+    -- Local Package Implementations
+    ----------------------------------------------------------------------------
+    package body Error is
+    
+        procedure Raise_If_Present is
+          
+            error_message : Interfaces.C.char_array;
+            return_code : Enum_Return_Codes;
+        begin
+            
+            return_code := Api.glfwGetError(message => error_message);
+            case return_code is
+                when NO_ERROR =>
+                    null;
+                when PLATFORM_ERROR =>
+                    raise Exceptions.PLATFORM_ERROR 
+                        with Interfaces.C.To_Ada(
+                            Item     => error_message,
+                            Trim_Nul => True);
+            end case;
+                            
+        end Raise_If_Present;
+        
+    end Error;
+    
 end Glfw;

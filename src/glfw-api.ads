@@ -22,57 +22,10 @@
 -- SOFTWARE.
 --------------------------------------------------------------------------------
 with Interfaces.C;
+with System;
+with Glfw.Error;
 
-private package Glfw.Api is
-
-    -- Return Codes that can be passed back from GLFW operations
-    type Enum_Return_Codes is (
-        NO_ERROR,
-        NOT_INITIALIZED,
-        NO_CURRENT_CONTEXT,
-        INVALID_ENUM,
-        INVALID_VALUE,
-        OUT_OF_MEMORY,
-        API_UNAVAILABLE,
-        VERSION_UNAVAILABLE,
-        PLATFORM_ERROR,
-        FORMAT_UNAVAILABLE,
-        NO_WINDOW_CONTEXT
-    );
-    -- Values to use for Return_Codes enumeration.
-    for Enum_Return_Codes use (
-        NO_ERROR            => 16#00000000#,
-        NOT_INITIALIZED     => 16#00010001#,
-        NO_CURRENT_CONTEXT  => 16#00010002#,
-        INVALID_ENUM        => 16#00010003#,
-        INVALID_VALUE       => 16#00010004#,
-        OUT_OF_MEMORY       => 16#00010005#,
-        API_UNAVAILABLE     => 16#00010006#,
-        VERSION_UNAVAILABLE => 16#00010007#,
-        PLATFORM_ERROR      => 16#00010008#,
-        FORMAT_UNAVAILABLE  => 16#00010009#,
-        NO_WINDOW_CONTEXT   => 16#0001000A#
-    );
-    for Enum_Return_Codes'Size use Interfaces.C.int'Size;
-    
-    -- Return codes related to initializing and terminating GLFW on the current
-    -- platform.
-    subtype Enum_Platform_Return_Codes is Enum_Return_Codes 
-        with Static_Predicate => Enum_Platform_Return_Codes in 
-            NO_ERROR | 
-            PLATFORM_ERROR;
-    
-    -- Return codes related to initializing a GLFW Window.
-    subtype Enum_Window_Init_Return_Codes is Enum_Return_Codes 
-        with Static_Predicate => Enum_Window_Init_Return_Codes in
-            NO_ERROR |
-            NOT_INITIALIZED |
-            INVALID_ENUM |
-            INVALID_VALUE |
-            API_UNAVAILABLE |
-            VERSION_UNAVAILABLE |
-            FORMAT_UNAVAILABLE |
-            PLATFORM_ERROR;
+private package Glfw.Api is    
             
     -- Import the glfwInit() function from the GLFW C library.
     function glfwInit return Glfw_Bool;
@@ -86,5 +39,15 @@ private package Glfw.Api is
                    Entity        => glfwTerminate,
                    External_Name => "glfwTerminate");
                    
-                             
+    -- Import the glfwGetError() function from the GLFW C library.
+    function glfwGetError
+        (
+            message :    out Interfaces.C.char_array
+        )
+        return Error.Enum_Return_Codes;
+    pragma Import (Convention    => C,
+                   Entity        => glfwGetError,
+                   External_Name => "glfwGetError");
+                   
+                   
 end Glfw.Api;
