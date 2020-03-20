@@ -3,3 +3,8 @@
 
 # Ada Library Information
 *.ali
+
+# Generated directories
+bin
+lib
+obj

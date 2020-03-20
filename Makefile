@@ -25,23 +25,41 @@
 # well as to build its tests.
 ################################################################################
 
-.PHONY: default samples
+.PHONY: default tests compile install clean uninstall
 
 default: tests
 
 DIRS = obj bin lib
 
 $(DIRS): 
-	@echo "Making Directory $@"
+	@echo "Making Directory $@..."
 	mkdir -p $@
+	@echo "   Done."
 
-tests: $(DIRS) FORCE
+compile: $(DIRS)
+	@echo "Compiling GLFWAda..."
+	gprbuild -p glfw.gpr
+	@echo "   Done."
+
+install: compile
+	@echo "Installing GLFWAda..."
+	sudo gprinstall -p glfw.gpr
+	@echo "   Done."
+
+uninstall:
+	@echo "Uninstalling GLFWAda..."
+	sudo gprinstall --uninstall glfw
+	@echo "   Done."
+
+tests: $(DIRS)
+	@echo "Compiling GLFWAda Tests..."
 	gprbuild -p glfw-test.gpr
-	
-clean_tests: 
-	gprclean -r -Pglfw-test.gpr
+	@echo "   Done."
 
-clean: clean_tests
+clean:
+	@echo "Cleaning Directories..."
 	rm -rf $(DIRS)
-	
-FORCE: ;
+	@echo "   Done."
+
+
+
