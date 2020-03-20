@@ -27,12 +27,12 @@ With Glfw;
 procedure Glfw_Test.Environment is
 
     -- The default window configuration is used, with no client API specified.
-    window_config : Glfw.Record_Window_Configuration := (
+    window_hints : Glfw.Record_Window_Hints := (
         Client_Api => Glfw.NO_API,
         others     => <>
     );    
     
-    window_id : Glfw.Window_Id := Glfw.NONE;
+    window_handle : Glfw.Glfw_Window := Glfw.No_Window;
     
 begin
     Ada.Text_IO.Put_Line("Initializing GLFW");
@@ -42,29 +42,33 @@ begin
     
     Ada.Text_IO.Put_Line("Initializing Window");
     
+    -- Set window hints
+    Glfw.Window_Set_Hints(
+        hints => window_hints);
+        
     -- Initialize a GLFW Window
-    Glfw.Window_Init(
-        width         => 1024,
-        height        => 768,
-        title         => "Hello World!",
-        window_config => window_config,
-        window        => window_id);
+    window_handle := 
+        Glfw.Window_Create(
+            width         => 1024,
+            height        => 768,
+            title         => "Hello World!");
    
     Ada.Text_IO.Put_Line("Running GLFW Main Loop");
    
     -- Main Loop
     loop 
+    
         ------------------------------------------------------------------------
         -- This loop will run forever until the user closes the window or some
         -- kind of exception occurs, which causes the program to begin handling
         -- the exception.
         ------------------------------------------------------------------------
-        pragma Warnings (Off, "variable ""window_id"" is not modified in loop body");
+        pragma Warnings (Off, "variable ""window_handle"" is not modified in loop body");
         pragma Warnings (Off, "possible infinite loop");
         
-        exit when Glfw.Window_Should_Close(window => window_id);
+        exit when Glfw.Window_Should_Close(window_handle => window_handle);
         
-        pragma Warnings (On, "variable ""window_id"" is not modified in loop body");
+        pragma Warnings (On, "variable ""window_handle"" is not modified in loop body");
         pragma Warnings (On, "possible infinite loop");
         
         -- Poll for Glfw events
@@ -73,7 +77,7 @@ begin
    
     Ada.Text_IO.Put_Line("Destroying Window");
    
-    Glfw.Window_Destroy(window => window_id);
+    Glfw.Window_Destroy(window_handle => window_handle);
    
     Ada.Text_IO.Put_Line("Shutting Down GLFW");
     

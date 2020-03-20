@@ -29,36 +29,36 @@ with Interfaces.C;
 
 private package Glfw.Error is
 
-	-- Return Codes that can be passed back from GLFW operations
-	type Enum_Return_Codes is (
-	    NO_ERROR,
-	    NOT_INITIALIZED,
-	    NO_CURRENT_CONTEXT,
-	    INVALID_ENUM,
-	    INVALID_VALUE,
-	    OUT_OF_MEMORY,
-	    API_UNAVAILABLE,
-	    VERSION_UNAVAILABLE,
-	    PLATFORM_ERROR,
-	    FORMAT_UNAVAILABLE,
-	    NO_WINDOW_CONTEXT
-	);
-	-- Values to use for Return_Codes enumeration.
-	for Enum_Return_Codes use (
-	    NO_ERROR            => 16#00000000#,
-	    NOT_INITIALIZED     => 16#00010001#,
-	    NO_CURRENT_CONTEXT  => 16#00010002#,
-	    INVALID_ENUM        => 16#00010003#,
-	    INVALID_VALUE       => 16#00010004#,
-	    OUT_OF_MEMORY       => 16#00010005#,
-	    API_UNAVAILABLE     => 16#00010006#,
-	    VERSION_UNAVAILABLE => 16#00010007#,
-	    PLATFORM_ERROR      => 16#00010008#,
-	    FORMAT_UNAVAILABLE  => 16#00010009#,
-	    NO_WINDOW_CONTEXT   => 16#0001000A#
-	);
-	for Enum_Return_Codes'Size use Interfaces.C.int'Size;
-	
+    -- Return Codes that can be passed back from GLFW operations
+    type Enum_Return_Codes is (
+        NO_ERROR,
+        NOT_INITIALIZED,
+        NO_CURRENT_CONTEXT,
+        INVALID_ENUM,
+        INVALID_VALUE,
+        OUT_OF_MEMORY,
+        API_UNAVAILABLE,
+        VERSION_UNAVAILABLE,
+        PLATFORM_ERROR,
+        FORMAT_UNAVAILABLE,
+        NO_WINDOW_CONTEXT
+    );
+    -- Values to use for Return_Codes enumeration.
+    for Enum_Return_Codes use (
+        NO_ERROR            => 16#00000000#,
+        NOT_INITIALIZED     => 16#00010001#,
+        NO_CURRENT_CONTEXT  => 16#00010002#,
+        INVALID_ENUM        => 16#00010003#,
+        INVALID_VALUE       => 16#00010004#,
+        OUT_OF_MEMORY       => 16#00010005#,
+        API_UNAVAILABLE     => 16#00010006#,
+        VERSION_UNAVAILABLE => 16#00010007#,
+        PLATFORM_ERROR      => 16#00010008#,
+        FORMAT_UNAVAILABLE  => 16#00010009#,
+        NO_WINDOW_CONTEXT   => 16#0001000A#
+    );
+    for Enum_Return_Codes'Size use Interfaces.C.int'Size;
+    
     ----------------------------------------------------------------------------
     -- @brief
     -- Check to see if any errors occurred, and then raise an exception if one

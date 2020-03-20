@@ -26,12 +26,13 @@
 --       this file where necessary.
 --------------------------------------------------------------------------------
 with Interfaces.C;
+with System;
 
 package Glfw is
 
     -- The following internal package contains exceptions that can be raised by
     -- GLFW Operations.
-    package Exceptions is 
+    package Exceptions is
         
         -- This occurs if a GLFW function was called that must not be called 
         -- unless the library is initialized.
@@ -111,8 +112,6 @@ package Glfw is
     ----------------------------------------------------------------------------
     DONT_CARE         : constant := -1;    
     MAX_STRING_LENGTH : constant := 256;
-    MAX_MONITOR_COUNT : constant := 32;
-    MAX_WINDOW_COUNT  : constant := 64;
     NONE              : constant := 0;
     
     ----------------------------------------------------------------------------
@@ -138,10 +137,18 @@ package Glfw is
     GLFW_STRING_EMPTY : constant Glfw_String := (others => Character'Val(0));
     
     -- IDs for GLFW windows
-    type Window_Id is new Integer range NONE .. MAX_WINDOW_COUNT;
+    type Glfw_Window is new System.Address;
+    
+    -- A constant which represents the case where no window is passed into or
+    -- returned by an operation.
+    No_Window : constant Glfw_Window := Glfw_Window(System.Null_Address);
     
     -- IDs for GLFW monitors
-    type Monitor_Id is new Integer range NONE .. MAX_MONITOR_COUNT;
+    type Glfw_Monitor is new System.Address;
+    
+    -- A constant which represents the case where no monitor is passed into or
+    -- returned by an operation.
+    No_Monitor : constant Glfw_Monitor := Glfw_Monitor(System.Null_Address);
     
     -- A Window Dimmension Attribute
     type Window_Dimmension is new Integer range 1 .. Integer'Last;
@@ -245,7 +252,7 @@ package Glfw is
     for Enum_OpenGl_Profile'Size use Interfaces.C.int'Size;
     
     -- Window Configuration Data
-    type Record_Window_Configuration is record    
+    type Record_Window_Hints is record    
     
         -- Specifies whether the windowed mode window will be resizable by the 
         -- user. The window will be resizable using the Set_Window_Size function.
@@ -412,11 +419,18 @@ package Glfw is
         -- Specifies the release behavior to be used by the context.
         Context_Release_Behavior : Enum_Context_Release_Behavior := RELEASE_BEHAVIOR_ANY;
         
+        -- Specifies whether the context generates errors. If enabled situations
+        -- that normally result in errors instead result in undefined behavior.
+        Context_No_Error         : Glfw_Bool                     := FALSE;
+        
         -- Specifies whether the OpenGL context should be forward compatible, i.e.
         -- where all functionality deprecated in the requested version of OpenGL is
         -- removed. This must only be used if the requested OpenGL version is 3.0
         -- or above. If OpenGL ES is requested, this hint is ignored.
         OpenGl_Forward_Compat    : Glfw_Bool                     := FALSE;
+        
+        -- Specifies whether to use the OpenGL Debug context.
+        OpenGl_Debug_Context     : Glfw_Bool                     := FALSE;
         
         -- Specifies which OpenGL profile to create the context for. If OpenGL ES
         -- is requested, this hint is ignored.
@@ -446,12 +460,18 @@ package Glfw is
         
     end record;
     
+    
     ----------------------------------------------------------------------------
     -- Platform Operations
     ----------------------------------------------------------------------------
     -- @brief
     -- This operation initializes GLFW, and should be called before most other
     -- GLFW operations.
+    --
+    -- This operation calls the glfwInit() library function.
+    --
+    -- When Platform_Init has previously been called without raising an exception,
+    -- it will return immediately without raising on subsequent calls.
     --
     -- @error 
     -- The following exceptions can be raised by this operation:
@@ -461,10 +481,16 @@ package Glfw is
     ----------------------------------------------------------------------------
     procedure Platform_Init;
     
+    
     ----------------------------------------------------------------------------
     -- @brief
     -- This operation shuts down GLFW, and should be called before exiting the
     -- application to free any resources used by GLFW.
+    --
+    -- This operation calls the glfwTerminate() GLFW library function.
+    --
+    -- @pre 
+    -- A call to Platform_Init has occurred without raising an exception.
     --
     -- @error 
     -- The following exceptions can be raised by this operation:
@@ -473,9 +499,15 @@ package Glfw is
     ----------------------------------------------------------------------------
     procedure Platform_Shutdown;
     
+    
     ----------------------------------------------------------------------------
     -- @brief
-    -- Process GLFW events.
+    -- Process GLFW events. 
+    --
+    -- This operation calls the glfwPollEvents() GLFW library function.
+    --
+    -- @pre 
+    -- A call to Platform_Init has occurred without raising an exception.
     --
     -- @error 
     -- The following exceptions can be raised by this operation:
@@ -484,27 +516,51 @@ package Glfw is
     ----------------------------------------------------------------------------
     procedure Platform_Process_Events; 
     
+    
     ----------------------------------------------------------------------------
     -- Window Operations
+    ----------------------------------------------------------------------------
+    -- @brief
+    -- For every member of the window configuration structure a call to set the
+    -- corresponding GLFW window Hint is made.
+    --
+    -- @pre 
+    -- A call to Platform_Init has occurred without raising an exception.
+    --
+    -- @param[in]     window_config The desired configuration for the window.
+    --
+    -- @error 
+    -- The following exceptions can be raised by this operation:
+    --    PLATFORM_ERROR
+    --    NOT_INITIALIZED
+    --    INVALID_ENUM
+    --
+    ----------------------------------------------------------------------------
+    procedure Window_Set_Hints
+        (
+            hints : Record_Window_Hints
+        );
+        
+        
     ----------------------------------------------------------------------------
     -- @brief
     -- This operation initializes a GLFW window, and should be called prior to
     -- use of any operation that depends on the existence of a window.
     --
-    -- For every member of the window configuration structure a call to set the
-    -- corresponding GLFW window Hint is made prior to creating the window.
+    -- @pre 
+    -- A call to Platform_Init has occurred without raising an exception.
     --
-    -- @param[in]     width         The desired width, in screen coordinates, of 
-    --                              the window.
-    -- @param[in]     height        The desired height, in screen coordinates, 
-    --                              of the window.
-    -- @param[in]     title         The initial, UTF-8 encoded window title.
-    -- @param[in]     monitor       The monitor to use for full screen mode, or 
-    --                              NULL for windowed mode.
-    -- @param[in]     share         The window whose context to share resources 
-    --                              with, or NULL to not share resources.
-    -- @param[in]     window_config The desired configuration for the window.
-    -- @param[out]    window        A handle to the created GLFW window.
+    -- @param[in]     width               The desired width, in screen coordinates, of 
+    --                                    the window.
+    -- @param[in]     height              The desired height, in screen coordinates, 
+    --                                    of the window.
+    -- @param[in]     title               The initial, UTF-8 encoded window title.
+    -- @param[in]     monitor_handle      The monitor to use for full screen mode, or 
+    --                                    NULL for windowed mode.
+    -- @param[in]     share_window_handle The window whose context to share resources 
+    --                                    with, or NULL to not share resources.
+    --
+    -- @returns A handle to the created GLFW window.
     --
     -- @error 
     -- The following exceptions can be raised by this operation:
@@ -517,42 +573,68 @@ package Glfw is
     --    FORMAT_UNAVAILABLE
     --    
     ----------------------------------------------------------------------------
-    procedure Window_Init
+    function Window_Create
         (
-            width         : in     Window_Dimmension;
-            height        : in     Window_Dimmension;
-            title         : in     String;
-            monitor       : in     Monitor_Id := NONE;
-            share         : in     Window_Id  := NONE;
-            window_config : in     Record_Window_Configuration;
-            window        : out    Window_Id
-        );
+            width               : in     Window_Dimmension;
+            height              : in     Window_Dimmension;
+            title               : in     String;
+            monitor_handle      : in     Glfw_Monitor := No_Monitor;
+            share_window_handle : in     Glfw_Window  := No_Window
+        )
+        return Glfw_Window;
+    
     
     ----------------------------------------------------------------------------
     -- @brief
     -- This operation determines whether the it has been requested for a window
     -- to close.
     --
-    -- @param[in]     window The window that should be closed.
+    -- @pre 
+    -- A call to Platform_Init() has occurred without raising an exception.
+    --
+    -- @pre
+    -- A call to Window_Create() has occured without raising an exception and
+    -- the returned window handle is still valid.
+    --
+    -- @param[in]     window_handle The window that should be closed.
     --
     -- @returns Boolean True if the window should close, otherwise boolean false.
+    --
+    -- @errors
+    -- The following exceptions can be raised by this operation:
+    --     NOT_INITIALIZED
+    --
     ----------------------------------------------------------------------------
     function Window_Should_Close
         (
-            window : in     Window_Id
+            window_handle : in     Glfw_Window
         )
-    return Boolean;
+        return Glfw_Bool;
+    
     
     ----------------------------------------------------------------------------
     -- @brief 
     -- This operation destroys the given window.
     --
-    -- @param[in]     window The window that will be destroyed.
+    -- @pre 
+    -- A call to Platform_Init() has occurred without raising an exception.
+    --
+    -- @pre
+    -- A call to Window_Create() has occured without raising an exception and
+    -- the returned window handle is still valid.
+    --
+    -- @param[in]     window_handle The window that will be destroyed.
+    --
+    -- @errors
+    -- The following exceptions can be raised by this operation:
+    --     NOT_INITIALIZED
+    --     PLATFORM_ERROR
+    --
     ----------------------------------------------------------------------------
     procedure Window_Destroy
         (
-            window : in     Window_Id
+            window_handle : in     Glfw_Window
         );
         
-        
+
 end Glfw;

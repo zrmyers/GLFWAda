@@ -54,42 +54,42 @@ package body Glfw.Error is
                     with Interfaces.C.Strings.Value(
                         Item => error_message);
                     
-	        when NO_CURRENT_CONTEXT =>
+            when NO_CURRENT_CONTEXT =>
                 raise Exceptions.NO_CURRENT_CONTEXT
                     with Interfaces.C.Strings.Value(
                         Item => error_message);
                     
-	        when INVALID_ENUM =>
+            when INVALID_ENUM =>
                 raise Exceptions.INVALID_ENUM
                     with Interfaces.C.Strings.Value(
                         Item => error_message);
                     
-	        when INVALID_VALUE =>
+            when INVALID_VALUE =>
                 raise Exceptions.INVALID_VALUE
                     with Interfaces.C.Strings.Value(
                         Item => error_message);
                     
-	        when OUT_OF_MEMORY =>
+            when OUT_OF_MEMORY =>
                 raise Exceptions.OUT_OF_MEMORY
                     with Interfaces.C.Strings.Value(
                         Item => error_message);
                     
-	        when API_UNAVAILABLE =>
+            when API_UNAVAILABLE =>
                 raise Exceptions.API_UNAVAILABLE
                     with Interfaces.C.Strings.Value(
                         Item => error_message);
                     
-	        when VERSION_UNAVAILABLE =>
+            when VERSION_UNAVAILABLE =>
                 raise Exceptions.VERSION_UNAVAILABLE
                     with Interfaces.C.Strings.Value(
                         Item => error_message);
                                       
-	        when FORMAT_UNAVAILABLE =>
+            when FORMAT_UNAVAILABLE =>
                 raise Exceptions.FORMAT_UNAVAILABLE
                     with Interfaces.C.Strings.Value(
                         Item => error_message);
                     
-	        when NO_WINDOW_CONTEXT =>
+            when NO_WINDOW_CONTEXT =>
                 raise Exceptions.NO_WINDOW_CONTEXT
                     with Interfaces.C.Strings.Value(
                         Item => error_message);
