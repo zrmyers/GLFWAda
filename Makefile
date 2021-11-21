@@ -31,7 +31,7 @@ default: tests
 
 DIRS = obj bin lib
 
-$(DIRS): 
+$(DIRS):
 	@echo "Making Directory $@..."
 	mkdir -p $@
 	@echo "   Done."
@@ -43,23 +43,22 @@ compile: $(DIRS)
 
 install: compile
 	@echo "Installing GLFWAda..."
-	sudo gprinstall -p glfw.gpr
+	gprinstall -p glfw.gpr
 	@echo "   Done."
 
 uninstall:
 	@echo "Uninstalling GLFWAda..."
-	sudo gprinstall --uninstall glfw
+	gprinstall --uninstall glfw
 	@echo "   Done."
 
 tests: $(DIRS)
 	@echo "Compiling GLFWAda Tests..."
 	gprbuild -p glfw-test.gpr
+	cp dependencies/glfw3.dll ./bin
+	./bin/glfw_test-environment.exe
 	@echo "   Done."
 
 clean:
 	@echo "Cleaning Directories..."
 	rm -rf $(DIRS)
 	@echo "   Done."
-
-
-

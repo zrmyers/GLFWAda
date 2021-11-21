@@ -25,75 +25,79 @@ with Glfw.Api;
 with Glfw.Error;
 with Glfw.Window_Hints;
 with Interfaces.C.Strings;
+use Interfaces.C;
+with System; use System;
+with Ada.Unchecked_Conversion;
 
 package body Glfw is
-    
+
     -- Renames
     Package CStrings renames Interfaces.C.Strings;
-    
+
+
     ----------------------------------------------------------------------------
     -- Platform Functions
     ----------------------------------------------------------------------------
 
 
-    procedure Platform_Init 
+    procedure Platform_Init
     is
         is_successful : Glfw_Bool := FALSE;
     begin
-        
+
         is_successful := Api.glfwInit;
-        
+
         if not is_successful then
-        
+
             -- A platform error must have occurred.
             Error.Raise_If_Present;
-            
+
         end if;
-        
+
     end Platform_Init;
-    
-    
+
+
     ----------------------------------------------------------------------------
 
 
-    procedure Platform_Shutdown 
+    procedure Platform_Shutdown
     is
     begin
-        
+
         Api.glfwTerminate;
-        
+
         Error.Raise_If_Present;
     end Platform_Shutdown;
-    
-    
+
+
     ----------------------------------------------------------------------------
 
 
-    procedure Platform_Process_Events 
-    is 
-    begin 
-    
+    procedure Platform_Process_Events
+    is
+    begin
+
         Api.glfwPollEvents;
-        
+
         Error.Raise_If_Present;
     end Platform_Process_Events;
-    
-    
+
+
     ----------------------------------------------------------------------------
     -- Window Functions
     ----------------------------------------------------------------------------
-    
-    
+
+
     procedure Window_Set_Hints
         (
             hints : Record_Window_Hints
         )
     is begin
-    
+
         for Hint in Window_Hints.Enum_Window_Hints'Range loop
-        
+
             case Hint is
-                
+
                 when Window_Hints.FOCUSED =>
                     Api.glfwWindowHint(
                         window_hint       => Hint,
@@ -304,17 +308,17 @@ package body Glfw is
                         window_hint       => Hint,
                         window_hint_value => CStrings.New_String(String(hints.X11_INSTANCE_NAME)));
             end case;
-            
+
             Error.Raise_If_Present;
-            
+
         end loop;
-        
+
     end Window_Set_Hints;
-    
-    
+
+
     ----------------------------------------------------------------------------
-    
-    
+
+
     function Window_Create
         (
             width               : in     Window_Dimmension;
@@ -323,24 +327,24 @@ package body Glfw is
             monitor_handle      : in     Glfw_Monitor := No_Monitor;
             share_window_handle : in     Glfw_Window  := No_Window
         )
-        return Glfw_Window        
-    is 
+        return Glfw_Window
+    is
         window_handle : Glfw_Window := No_Window;
     begin
-    
+
        window_handle := Api.glfwCreateWindow(
            width => width,
            height => height,
            title => CStrings.New_String(title),
            monitor => monitor_handle,
            window => share_window_handle);
-           
+
        Error.Raise_If_Present;
-       
+
        return window_handle;
     end Window_Create;
-    
-    
+
+
     ----------------------------------------------------------------------------
 
 
@@ -348,35 +352,76 @@ package body Glfw is
         (
             window_handle : in     Glfw_Window
         )
-        return Glfw_Bool 
-    is 
+        return Glfw_Bool
+    is
        should_close : Glfw_Bool := FALSE;
     begin
-    
-        should_close := 
+
+        should_close :=
             Api.glfwWindowShouldClose(
                 window => window_handle);
-                
+
         Error.Raise_If_Present;
-       
+
         return should_close;
-    end;
-    
-    
+    end Window_Should_Close;
+
+
     ----------------------------------------------------------------------------
 
 
     procedure Window_Destroy
         (
             window_handle : in     Glfw_Window
-        ) 
+        )
     is
     begin
-    
+
        Api.glfwDestroyWindow(
            window => window_handle);
-           
+
        Error.Raise_If_Present;
-    end;
-    
+    end Window_Destroy;
+
+
+    ----------------------------------------------------------------------------
+
+
+    procedure Get_Required_Instance_Extensions
+        (
+            extensions : in out     Glfw_String_Vector) is
+
+        extension_count : Interfaces.C.unsigned;
+        pp_extensions_addr : System.Address := System.Null_Address;
+
+    begin
+
+        pp_extensions_addr :=
+            Api.glfwGetRequiredInstanceExtensions(extension_count);
+
+        if (extension_count > 0) and (pp_extensions_addr /= System.Null_Address) then
+            declare
+
+                -- Convert System Address to char**
+                type Char_Ptr_Array is Array(1 .. Integer(extension_count)) of
+                    aliased Interfaces.C.Strings.Chars_Ptr;
+
+                function To_Char_Ptr_Array is new Ada.Unchecked_Conversion(
+                    Source => System.Address, Target => Char_Ptr_Array);
+
+                -- Reinterpret system address as array of char pointers
+                pp_extensions : constant Char_Ptr_Array := To_Char_Ptr_Array(pp_extensions_addr);
+
+                extension_name : String(1 .. 256);
+            begin
+                for index in 1 .. Integer(extension_count) loop
+                    extension_name := Interfaces.C.Strings.Value(pp_extensions(index));
+                    extensions.Append(Glfw_String(extension_name));
+                end loop;
+            end;
+        end if;
+
+        Error.Raise_If_Present;
+    end Get_Required_Instance_Extensions;
+
 end Glfw;

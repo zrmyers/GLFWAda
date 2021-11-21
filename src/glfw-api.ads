@@ -26,8 +26,8 @@ with Interfaces.C.Strings;
 with Glfw.Error;
 with Glfw.Window_Hints;
 
-private package Glfw.Api is    
-            
+private package Glfw.Api is
+
     ----------------------------------------------------------------------------
     -- Platform Level Functions
     ----------------------------------------------------------------------------
@@ -36,15 +36,15 @@ private package Glfw.Api is
     pragma Import (Convention    => C,
                    Entity        => glfwInit,
                    External_Name => "glfwInit");
-                   
-                   
+
+
     -- Import the glfwTerminate() function from the GLFW C library.
     procedure glfwTerminate;
     pragma Import (Convention    => C,
                    Entity        => glfwTerminate,
-                   External_Name => "glfwTerminate"); 
-                   
-                   
+                   External_Name => "glfwTerminate");
+
+
     -- Import the glfwGetError() function from the GLFW C library.
     function glfwGetError
         (
@@ -54,15 +54,15 @@ private package Glfw.Api is
     pragma Import (Convention    => C,
                    Entity        => glfwGetError,
                    External_Name => "glfwGetError");
-                   
-         
+
+
     -- Import the glfwPollEvents() function from the GLFW C library
     procedure glfwPollEvents;
     pragma Import (Convention    => C,
                    Entity        => glfwPollEvents,
                    External_Name => "glfwPollEvents");
-            
-            
+
+
     ----------------------------------------------------------------------------
     -- Window Level Functions
     ----------------------------------------------------------------------------
@@ -105,7 +105,7 @@ private package Glfw.Api is
     pragma Import (Convention    => C,
                    Entity        => glfwWindowHint,
                    External_Name => "glfwWindowHint");
-                   
+
     -- Import the glfwWindHintString() function from the GLFW Library.
     procedure glfwWindowHintString
         (
@@ -115,7 +115,7 @@ private package Glfw.Api is
     pragma Import (Convention    => C,
                    Entity        => glfwWindowHintString,
                    External_Name => "glfwWindowHintString");
-    
+
     -- Import the glfwCreateWindow() function from the GLFW Library.
     function glfwCreateWindow
         (
@@ -129,7 +129,7 @@ private package Glfw.Api is
     pragma Import (Convention    => C,
                    Entity        => glfwCreateWindow,
                    External_Name => "glfwCreateWindow");
-                   
+
     -- Import the glfwWindowShouldClose() function from the GLFW Library.
     function glfwWindowShouldClose
         (
@@ -139,7 +139,7 @@ private package Glfw.Api is
     pragma Import (Convention    => C,
                    Entity        => glfwWindowShouldClose,
                    External_Name => "glfwWindowShouldClose");
-                   
+
     -- Import the glfwDestroyWindow() function from the GLFW Library.
     procedure glfwDestroyWindow
         (
@@ -148,4 +148,14 @@ private package Glfw.Api is
     pragma Import (Convention    => C,
                    Entity        => glfwDestroyWindow,
                    External_Name => "glfwDestroyWindow");
+
+    function glfwGetRequiredInstanceExtensions
+        (
+            p_extension_count :    out Interfaces.C.unsigned
+        )
+        return System.Address;
+    pragma Import (Convention    => C,
+                   Entity        => glfwGetRequiredInstanceExtensions,
+                   External_Name => "glfwGetRequiredInstanceExtensions");
+
 end Glfw.Api;

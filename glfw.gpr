@@ -23,22 +23,35 @@
 --------------------------------------------------------------------------------
 library project Glfw is
 
+    -- The windowing system for which the GLFW ADA library is built
+    type Windowing_System_Type is ("windows","x11");
+
+    -- Default window system is x11.
+    window_system : Windowing_System_Type := external ("window_system", "windows");
+
     for Languages use ("Ada");
     for Library_Name use "GlfwAda";
     for Library_Kind use "static";
     for Object_Dir use "obj";
-    for Library_Dir use "lib";    
+    for Library_Dir use "lib";
     for Source_Dirs use ("src");
-    
+
     package Compiler is
         for Switches ("Ada") use (
             "-gnatwae" -- Turn on warnings as errors
         );
-    end Compiler;  
-    
+    end Compiler;
+
     package Linker is
-        for Linker_Options use 
-            ("-lglfw","-lrt","-lm","-ldl","-lX11","-lpthread","-lxcb","-lXau",
-             "-lXdmcp");
+        case window_system is
+            when "windows" =>
+                for Linker_Options use
+                  ("-Ldependencies","-lglfw3","-lwinmm","-lgdi32");
+
+            when "x11" =>
+                for Linker_Options use
+                  ("-lglfw","-lrt","-lm","-ldl","-lX11","-lpthread","-lxcb","-lXau",
+                   "-lXdmcp");
+        end case;
     end Linker;
 end Glfw;
