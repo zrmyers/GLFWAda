@@ -23,10 +23,22 @@
 --------------------------------------------------------------------------------
 with Interfaces.C;
 with Interfaces.C.Strings;
+with Interfaces.C.Pointers;
 with Glfw.Error;
 with Glfw.Window_Hints;
 
 private package Glfw.Api is
+
+    type Char_Ptr_Array is Array(Natural range <>) of
+        aliased Interfaces.C.Strings.Chars_Ptr;
+
+    package Char_Ptr_Array_Ptrs is new Interfaces.C.Pointers (
+        index => Natural,
+        Element => Interfaces.C.Strings.Chars_Ptr,
+        Element_Array => Char_Ptr_Array,
+        Default_Terminator => Interfaces.C.Strings.Null_Ptr) ;
+
+    subtype Char_Ptr_Array_Ptr is Char_Ptr_Array_Ptrs.Pointer;
 
     ----------------------------------------------------------------------------
     -- Platform Level Functions
@@ -153,7 +165,7 @@ private package Glfw.Api is
         (
             p_extension_count :    out Interfaces.C.unsigned
         )
-        return System.Address;
+        return Char_Ptr_Array_Ptr;
     pragma Import (Convention    => C,
                    Entity        => glfwGetRequiredInstanceExtensions,
                    External_Name => "glfwGetRequiredInstanceExtensions");

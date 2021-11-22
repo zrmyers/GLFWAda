@@ -26,8 +26,8 @@ with Glfw.Error;
 with Glfw.Window_Hints;
 with Interfaces.C.Strings;
 use Interfaces.C;
-with System; use System;
 with Ada.Unchecked_Conversion;
+with Ada.Text_IO;
 
 package body Glfw is
 
@@ -291,7 +291,7 @@ package body Glfw is
                 when Window_Hints.COCOA_FRAME_NAME =>
                     Api.glfwWindowHintString(
                         window_hint       => Hint,
-                        window_hint_value => CStrings.New_String(String(hints.COCOA_FRAME_NAME)));
+                        window_hint_value => CStrings.New_String(To_String(hints.COCOA_FRAME_NAME)));
 
                 when Window_Hints.COCOA_GRAPHICS_SWITCHING =>
                     Api.glfwWindowHint(
@@ -301,12 +301,12 @@ package body Glfw is
                 when Window_Hints.X11_CLASS_NAME =>
                     Api.glfwWindowHintString(
                         window_hint       => Hint,
-                        window_hint_value => CStrings.New_String(String(hints.X11_CLASS_NAME)));
+                        window_hint_value => CStrings.New_String(To_String(hints.X11_CLASS_NAME)));
 
                 when Window_Hints.X11_INSTANCE_NAME =>
                     Api.glfwWindowHintString(
                         window_hint       => Hint,
-                        window_hint_value => CStrings.New_String(String(hints.X11_INSTANCE_NAME)));
+                        window_hint_value => CStrings.New_String(To_String(hints.X11_INSTANCE_NAME)));
             end case;
 
             Error.Raise_If_Present;
@@ -391,34 +391,23 @@ package body Glfw is
         (
             extensions : in out     Glfw_String_Vector) is
 
-        extension_count : Interfaces.C.unsigned;
-        pp_extensions_addr : System.Address := System.Null_Address;
+        extension_count : Interfaces.C.unsigned := 0;
+        pp_extensions_ptr : constant Api.Char_Ptr_Array_Ptr := Api.glfwGetRequiredInstanceExtensions(extension_count);
+        pp_extensions : constant Api.Char_Ptr_Array(1 .. Integer(extension_count)) :=
+            Api.Char_Ptr_Array_Ptrs.Value(pp_extensions_ptr, Interfaces.C.ptrdiff_t(extension_count));
 
     begin
+        Ada.Text_IO.Put_Line("Extension count " & extension_count'Image);
+        if (extension_count > 0) then
 
-        pp_extensions_addr :=
-            Api.glfwGetRequiredInstanceExtensions(extension_count);
-
-        if (extension_count > 0) and (pp_extensions_addr /= System.Null_Address) then
-            declare
-
-                -- Convert System Address to char**
-                type Char_Ptr_Array is Array(1 .. Integer(extension_count)) of
-                    aliased Interfaces.C.Strings.Chars_Ptr;
-
-                function To_Char_Ptr_Array is new Ada.Unchecked_Conversion(
-                    Source => System.Address, Target => Char_Ptr_Array);
-
-                -- Reinterpret system address as array of char pointers
-                pp_extensions : constant Char_Ptr_Array := To_Char_Ptr_Array(pp_extensions_addr);
-
-                extension_name : String(1 .. 256);
-            begin
-                for index in 1 .. Integer(extension_count) loop
-                    extension_name := Interfaces.C.Strings.Value(pp_extensions(index));
-                    extensions.Append(Glfw_String(extension_name));
-                end loop;
-            end;
+            for index in 1 .. Integer(extension_count) loop
+                declare
+                    extension_name : constant String := Interfaces.C.Strings.Value(pp_extensions(index));
+                begin
+                    Ada.Text_IO.Put_Line("Extension Name " & extension_name);
+                    extensions.Append(To_Bounded_String(extension_name));
+                end;
+            end loop;
         end if;
 
         Error.Raise_If_Present;

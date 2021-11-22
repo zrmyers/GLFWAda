@@ -28,6 +28,7 @@
 with Interfaces.C;
 with System;
 with Ada.Containers.Vectors;
+with Ada.Strings.Bounded;
 
 package Glfw is
 
@@ -121,9 +122,12 @@ package Glfw is
     -- A GLFW Integer Value
     type Glfw_Int is new Integer range DONT_CARE .. Integer'Last;
 
+    --< Common string type used throughout Vulkan interface.
+    package Glfw_Strings is new Ada.Strings.Bounded.Generic_Bounded_Length (Max => MAX_STRING_LENGTH);
+
     -- A String Attribute.  Assuming maximum string length of 256
     -- characters
-    type Glfw_String is new String (1 .. MAX_STRING_LENGTH);
+    type Glfw_String is new Glfw_Strings.Bounded_String;
 
     -- A list of strings.
     package Glfw_String_Vectors is new Ada.Containers.Vectors (
@@ -142,7 +146,7 @@ package Glfw is
     for Glfw_Bool'Size use Interfaces.C.int'Size;
 
     -- An empty Glfw_String.
-    GLFW_STRING_EMPTY : constant Glfw_String := (others => Character'Val(0));
+    GLFW_STRING_EMPTY : constant Glfw_String := To_Bounded_String("");
 
     -- IDs for GLFW windows
     type Glfw_Window is new System.Address;
