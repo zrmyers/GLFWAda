@@ -38,22 +38,22 @@ $(DIRS):
 
 compile: $(DIRS)
 	@echo "Compiling GLFWAda..."
-	gprbuild -p glfw.gpr
+	gprbuild -p glfwada.gpr
 	@echo "   Done."
 
 install: compile
 	@echo "Installing GLFWAda..."
-	gprinstall -p -f glfw.gpr
+	gprinstall -p -f glfwada.gpr
 	@echo "   Done."
 
 uninstall:
 	@echo "Uninstalling GLFWAda..."
-	gprinstall --uninstall glfw
+	gprinstall --uninstall glfwada
 	@echo "   Done."
 
 tests: $(DIRS)
 	@echo "Compiling GLFWAda Tests..."
-	gprbuild -p glfw-test.gpr
+	gprbuild -p glfwada-test.gpr
 	cp dependencies/glfw3.dll ./bin
 	./bin/glfw_test-environment.exe
 	@echo "   Done."

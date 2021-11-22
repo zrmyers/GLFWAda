@@ -21,13 +21,37 @@
 -- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 -- SOFTWARE.
 --------------------------------------------------------------------------------
-with "glfw";
+library project GlfwAda is
 
-project Glfw.Test is
+    -- The windowing system for which the GLFW ADA library is built
+    type Windowing_System_Type is ("windows","x11");
 
-    for Languages use ("ada");     
+    -- Default window system is x11.
+    window_system : Windowing_System_Type := external ("window_system", "windows");
+
+    for Languages use ("Ada");
+    for Library_Name use "GlfwAda";
+    for Library_Kind use "static";
     for Object_Dir use "obj";
-    for Exec_Dir use "bin";
-    for Source_Dirs use ("tests/");   
-    for Main use ("glfw_test-environment.adb");
-end Glfw.Test;
+    for Library_Dir use "lib";
+    for Source_Dirs use ("src");
+
+    package Compiler is
+        for Switches ("Ada") use (
+            "-gnatwae" -- Turn on warnings as errors
+        );
+    end Compiler;
+
+    package Linker is
+        case window_system is
+            when "windows" =>
+                for Linker_Options use
+                  ("-Ldependencies","-lglfw3","-lwinmm","-lgdi32");
+
+            when "x11" =>
+                for Linker_Options use
+                  ("-lglfw","-lrt","-lm","-ldl","-lX11","-lpthread","-lxcb","-lXau",
+                   "-lXdmcp");
+        end case;
+    end Linker;
+end GlfwAda;
