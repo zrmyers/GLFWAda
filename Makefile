@@ -43,7 +43,7 @@ compile: $(DIRS)
 
 install: compile
 	@echo "Installing GLFWAda..."
-	gprinstall -p -f glfwada.gpr
+	gprinstall -p -f -v glfwada.gpr
 	@echo "   Done."
 
 uninstall:
